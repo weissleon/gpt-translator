@@ -1,2 +1,4 @@
 node_modules
-config
+config/credentials.yaml
+out
+*.xlsx
