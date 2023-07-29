@@ -1,5 +1,9 @@
 const { checkIfFileExists } = require("./src/fs-handler");
-const { translate } = require("./src/openai-api-handler");
+const {
+  translate,
+  getTokenCount,
+  sliceBasedOnTokenCount,
+} = require("./src/openai-api-handler");
 const { config } = require("./src/config-handler");
 const {
   showWelcomeMessage,
@@ -14,6 +18,7 @@ const {
   convertToExcelTable,
   filterReference,
   getAllRows,
+  getHeader,
 } = require("./src/excel-handler");
 
 const run = async () => {
@@ -46,36 +51,54 @@ const run = async () => {
     index !== 0 ? rowPair[1] : rowPair
   );
 
-  const referenceTable = convertToMarkdownTable(referenceSlice);
+  const referenceMdTable = convertToMarkdownTable(referenceSlice);
   const dataMdTable = convertToMarkdownTable(dataSlice, true);
 
-  const glossayHeader = [...workbook.getWorksheet("glossary").getRow(1).values];
-  glossayHeader.shift();
-  const glossaryData = getAllRows(workbook.getWorksheet("glossary")).map(
-    (row) => {
-      row.shift();
-      return row;
-    }
-  );
+  const glossaryHeader = getHeader(workbook.getWorksheet("glossary"));
+  const glossaryData = getAllRows(workbook.getWorksheet("glossary"));
   const glossaryMdTable = convertToMarkdownTable([
-    glossayHeader,
+    glossaryHeader,
     ...glossaryData,
   ]);
 
-  //   console.log("data");
-  //   console.log(dataMdTable);
-  //   console.log("ref");
-  //   console.log(referenceTable);
-  //   console.log("glossary");
-  //   console.log(glossaryMdTable);
+  const glossaryTokenCount = getTokenCount(glossaryMdTable);
+  const instructionTemplate = config["instruction"] + "\n```\n";
+  const instructionTemplateTokenCount = getTokenCount(instructionTemplate);
+
+  const { instruction: instructionMaxTokenCount, input: inputMaxTokenCount } =
+    config["maxTokenCount"];
+  const availableInstructionTokenCount =
+    instructionMaxTokenCount -
+    instructionTemplateTokenCount -
+    glossaryTokenCount;
+
+  console.log(`available token count: ${availableInstructionTokenCount}`);
+
+  const slicedRefTable = sliceBasedOnTokenCount(
+    referenceMdTable,
+    availableInstructionTokenCount
+  );
 
   const instruction =
-    config["instruction"] + "```\n" + referenceTable + "\n\n" + glossaryMdTable;
-  console.log(instruction);
-  //   console.log(finalData);
-  //   await translate("hi");
+    instructionTemplate + slicedRefTable[0] + `\n\n${glossaryMdTable}`;
 
-  const finalData = convertToExcelTable(dataMdTable);
+  const slicedDataTable = sliceBasedOnTokenCount(
+    dataMdTable,
+    inputMaxTokenCount
+  );
+
+  console.log(referenceIndices);
+  console.log(dataIndices);
+
+  for (let i = 0; i < slicedDataTable.length; i++) {
+    const dataChunk = slicedDataTable[i];
+
+    console.log("Requesting");
+    const result = await translate(instruction, dataChunk);
+
+    console.log(result);
+  }
+  // const finalData = convertToExcelTable(dataMdTable);
   //   await workbook.xlsx.writeFile("out.xlsx");
 };
 

@@ -1,5 +1,7 @@
-const text = "Here we \ngo".replace(/(\r?\n|\r)/g, "\\n");
+const { encode } = require("gpt-tokenizer");
 
-const obj = { text };
+const text = "`Muy bien?!`";
 
-console.log(text);
+const token = encode(text);
+
+console.log(token);

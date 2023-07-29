@@ -18,3 +18,7 @@ requiredFields:
     - target_language
     - original
     - translation
+
+maxTokenCount:
+  instruction: 3000
+  input: 5000

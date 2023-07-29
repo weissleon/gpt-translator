@@ -46,7 +46,7 @@ const getAllRows = (worksheet) => {
     .getRows(2, rowCount)
     .filter((row) => row.values.length !== 0)
     .map((row) => {
-      return stringifyRow(row.values);
+      return stringifyRow(row.values.slice(1));
     });
 };
 
@@ -68,17 +68,18 @@ const stringifyRow = (row) => {
   });
 };
 
+const getHeader = (worksheet) => {
+  return stringifyRow(worksheet.getRow(1).values.slice(1));
+};
+
 const verifyData = (workbook) => {
   for (let i = 0; i < workbook.worksheets.length; i++) {
     const worksheet = workbook.worksheets[i];
-    const headerLength = worksheet.getRow(1).values.length - 1;
+    const headerLength = getHeader(worksheet).length;
     const rows = getAllRows(worksheet);
     for (let j = 0; j < rows.length; j++) {
       const row = rows[j];
-      row.shift();
-
-      if (row.length !== headerLength - 1 && row.length !== headerLength)
-        return false;
+      if (headerLength - row.length > 1) return false;
       for (let k = 0; k < row.length; k++) {
         const cell = row[k];
         if (cell === undefined && k !== row.length - 1) return false;
@@ -86,6 +87,10 @@ const verifyData = (workbook) => {
     }
   }
   return true;
+};
+
+const convertToArr = (worksheet) => {
+  return [getHeader(worksheet), ...getAllRows(worksheet)];
 };
 
 const convertToMarkdownTable = (arrData, exludeLast = false) => {
@@ -137,8 +142,7 @@ const convertToExcelTable = (mdTable) => {
 };
 
 const filterReference = (worksheet) => {
-  const headers = worksheet.getRow(1).values;
-  headers.shift();
+  const headers = getHeader(worksheet);
 
   const rows = getAllRows(worksheet);
 
@@ -150,7 +154,6 @@ const filterReference = (worksheet) => {
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    row.shift();
     if (row[5] === undefined) data.push([i + 2, row]);
     else reference.push([i + 2, row]);
   }
@@ -167,4 +170,5 @@ module.exports = {
   convertToExcelTable,
   filterReference,
   getAllRows,
+  getHeader,
 };
