@@ -125,7 +125,7 @@ const convertToMarkdownTable = (arrData, exludeLast = false) => {
   return table;
 };
 const convertToExcelTable = (mdTable) => {
-  const rows = mdTable.split(/\r?\n|\r/g);
+  const rows = mdTable.split(/\r?\n|\r/g).filter((row) => row !== "");
 
   const data = [];
   for (let i = 0; i < rows.length; i++) {

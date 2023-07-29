@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 const OUT_DIRPATH = "out";
 
@@ -31,9 +32,19 @@ const createOutDirectory = () => {
   createDirectory(OUT_DIRPATH);
 };
 
+const exportExcelFile = async (workbook, fileName) => {
+  const outDirExists = checkIfOutDirectoryExists();
+  if (!outDirExists) createOutDirectory();
+
+  const exportFilePath = path.join(OUT_DIRPATH, fileName);
+  await workbook.xlsx.writeFile(exportFilePath);
+  return exportFilePath;
+};
+
 module.exports = {
   readFile,
   checkIfFileExists,
   checkIfOutDirectoryExists,
   createOutDirectory,
+  exportExcelFile,
 };

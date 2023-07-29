@@ -1,4 +1,4 @@
-const { checkIfFileExists } = require("./src/fs-handler");
+const { checkIfFileExists, exportExcelFile } = require("./src/fs-handler");
 const {
   translate,
   getTokenCount,
@@ -20,6 +20,8 @@ const {
   getAllRows,
   getHeader,
 } = require("./src/excel-handler");
+
+const path = require("path");
 
 const run = async () => {
   showWelcomeMessage();
@@ -72,8 +74,6 @@ const run = async () => {
     instructionTemplateTokenCount -
     glossaryTokenCount;
 
-  console.log(`available token count: ${availableInstructionTokenCount}`);
-
   const slicedRefTable = sliceBasedOnTokenCount(
     referenceMdTable,
     availableInstructionTokenCount
@@ -87,19 +87,34 @@ const run = async () => {
     inputMaxTokenCount
   );
 
-  console.log(referenceIndices);
-  console.log(dataIndices);
-
+  let currentIdx = 0;
+  const translationWithIdx = [];
   for (let i = 0; i < slicedDataTable.length; i++) {
     const dataChunk = slicedDataTable[i];
 
     console.log("Requesting");
-    const result = await translate(instruction, dataChunk);
+    const translationMdTable = await translate(instruction, dataChunk);
+    const translationArray = convertToExcelTable(translationMdTable);
+    translationArray.shift();
 
-    console.log(result);
+    for (let j = 0; j < translationArray.length; j++) {
+      const translation = translationArray[j][0];
+      translationWithIdx.push([dataIndices[currentIdx], translation]);
+      currentIdx++;
+    }
   }
-  // const finalData = convertToExcelTable(dataMdTable);
-  //   await workbook.xlsx.writeFile("out.xlsx");
+
+  for (let i = 0; i < translationWithIdx.length; i++) {
+    const [idx, translation] = translationWithIdx[i];
+    const ws = workbook.getWorksheet("data");
+    ws.getCell(idx, ws.columnCount).value = translation;
+  }
+
+  const outputFile = path.basename(filePath);
+
+  console.log("Exporting...");
+  const exportFilePath = await exportExcelFile(outputFile);
+  console.log(`File Exported to "${exportFilePath}"`);
 };
 
 run();

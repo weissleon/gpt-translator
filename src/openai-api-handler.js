@@ -69,7 +69,7 @@ const translate = async (instructionData, inputData) => {
 
   const data = await result.json();
 
-  return data;
+  return data["choices"][0]["message"]["content"];
 };
 
 module.exports = {
