@@ -113,7 +113,7 @@ const run = async () => {
   const outputFile = path.basename(filePath);
 
   console.log("Exporting...");
-  const exportFilePath = await exportExcelFile(outputFile);
+  const exportFilePath = await exportExcelFile(workbook, outputFile);
   console.log(`File Exported to "${exportFilePath}"`);
 };
 
