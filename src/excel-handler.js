@@ -55,7 +55,11 @@ const stringifyRow = (row) => {
     let finalCell = cell;
     if (typeof cell === "object") {
       if (cell["result"] !== undefined) finalCell = cell["result"];
-      else finalCell = cell["text"];
+      else if (cell["richText"] !== undefined) {
+        let extractedText = "";
+        cell["richText"].forEach((data) => (extractedText += data["text"]));
+        finalCell = extractedText;
+      } else finalCell = cell["text"];
     }
 
     if (finalCell !== undefined) {

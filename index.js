@@ -93,6 +93,7 @@ const run = async () => {
     const dataChunk = slicedDataTable[i];
 
     console.log("Requesting");
+    console.log(`Token Count: ${getTokenCount(dataChunk)}`);
     const translationMdTable = await translate(instruction, dataChunk);
     const translationArray = convertToExcelTable(translationMdTable);
     translationArray.shift();
@@ -110,10 +111,10 @@ const run = async () => {
     ws.getCell(idx, ws.columnCount).value = translation;
   }
 
-  const outputFile = path.basename(filePath);
-
   console.log("Exporting...");
+  const outputFile = path.basename(filePath).split(".")[0];
   const exportFilePath = await exportExcelFile(workbook, outputFile);
+
   console.log(`File Exported to "${exportFilePath}"`);
 };
 

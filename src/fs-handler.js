@@ -36,7 +36,18 @@ const exportExcelFile = async (workbook, fileName) => {
   const outDirExists = checkIfOutDirectoryExists();
   if (!outDirExists) createOutDirectory();
 
-  const exportFilePath = path.join(OUT_DIRPATH, fileName);
+  const dateObj = new Date();
+  const year = dateObj.getFullYear();
+  const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+  const date = dateObj.getDate().toString().padStart(2, "0");
+  const hour = dateObj.getHours().toString().padStart(2, "0");
+  const minute = dateObj.getMinutes().toString().padStart(2, "0");
+  const second = dateObj.getSeconds().toString().padStart(2, "0");
+
+  const exportFilePath = path.join(
+    OUT_DIRPATH,
+    `${fileName}_${year}${month}${date}${hour}${minute}${second}.xlsx`
+  );
   await workbook.xlsx.writeFile(exportFilePath);
   return exportFilePath;
 };
